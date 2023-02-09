@@ -9,8 +9,22 @@ $HttpRequestMessage.Headers.Add('authorization', $('bearer ' + $TokenReturn))
 $HttpRequestMessage.RequestUri = "https://management.azure.com/subscriptions/$($subscriptionId)/providers/Microsoft.Sql/servers?api-version=2022-05-01-preview"
 $InvokeReturn = $HttpClient.SendAsync($HttpRequestMessage).GetAwaiter().GetResult()
 If ($InvokeReturn.statuscode.Value__ -eq 200) {
-    $($InvokeReturn.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json -Depth 100).value
+    $ResultsThatNeedEndpoints = @{
+        WholeRecords   = [System.Collections.ArrayList]::new()
+        resourceGroups = [System.Collections.ArrayList]::new()
+        SQLServersId   = [System.Collections.ArrayList]::new()
+        SQLServersName = [System.Collections.ArrayList]::new()
+    }
+    $ReturnedCollection = $($InvokeReturn.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json -Depth 100).value | ForEach-Object {
+        if ($null -eq $_.properties.privateEndpointConnections.id) {
+            [void]$ResultsThatNeedEndpoints.WholeRecords.add($_)
+            [void]$ResultsThatNeedEndpoints.resourceGroups.add($($_.id -split('/', ''))[4])
+            [void]$ResultsThatNeedEndpoints.SQLServersId.add($_.id)
+            [void]$ResultsThatNeedEndpoints.SQLServersName.add($_.name)
+        }
+    }
 }
+$ResultsThatNeedEndpoints #<---- USE Dot notation to get the arraylist of the results that need endpoints and their properties
 
 EXAMPLE RETURN
 {
