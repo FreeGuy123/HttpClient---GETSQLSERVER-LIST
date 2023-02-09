@@ -43,3 +43,35 @@ EXAMPLE RETURN
         ######### USE THIS SECTION TO QUEUE UP THE SQL SERVERS FOR THE PRIVATE ENDPOINT CREATION #########
     }
 }
+
+
+####Body to create PrivateLinks
+$Method = 'PUT'
+$Body = [ordered]@{
+    location = "LOCATION"; tags = "TAGS AS KEY VALUE PAIR";
+    properties = [ordered]@{
+        privateLinkServiceConnections       = @([ordered]@{ 
+                name       = "NAMEOFPRIVATELINK"; 
+                properties = [ordered]@{ 
+                    privateLinkServiceId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Sql/servers/$SERVERNAME"; 
+                    groupIds             = @("sqlServer") 
+                } 
+            }      
+        );
+        subnet                              = [ordered]@{ 
+            id = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Network/virtualNetworks/$VNETNAME/subnets/$SUBNETNAME" 
+        };
+        ipConfigurations                    = @( [ordered]@{ 
+                name       = "CONFIGURATIONNAMEHERE"; 
+                properties = [ordered]@{ 
+                    groupId          = "sqlServer"; 
+                    memberName       = "sqlServer"; 
+                    privateIPAddress = "THE STATIC IP YOU WANT TO USE" 
+                } 
+            } 
+        ); 
+        manualPrivateLinkServiceConnections = @(); 
+        customNetworkInterfaceName          = "NICNAMEHERE"; 
+        customDnsConfigs                    = @()
+    }
+}
